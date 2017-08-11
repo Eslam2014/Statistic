@@ -1,8 +1,11 @@
 package analysis.statistic;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.DoubleStream;
@@ -17,7 +20,7 @@ import java.util.stream.LongStream;
  * @author Eslam Ali
  *
  */
-public class StatisticMeasures {
+public class DescriptiveStatistic {
 
 	/**
 	 * Calculates the average of the squared differences from the Mean.
@@ -156,14 +159,14 @@ public class StatisticMeasures {
 	 * 
 	 * @return Map<object,countAppears> most appears objects.
 	 */
+	
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<? super T>> ModePair<T> mode(T... objects) {
+	public static <T> Entry<Set<T>, Integer> mode(T... objects) {
 		Objects.requireNonNull(objects, "objects must not be null");
 		if (objects.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
+			return null;
 		}
-		Arrays.sort(objects);
-		Mode<T> mode = new Mode<T>(objects[0]);
+		Mode<T> mode = new Mode<T>();
 		for (T t : objects) {
 			mode.checkMaxAppears(t);
 		}
@@ -172,36 +175,17 @@ public class StatisticMeasures {
 
 	}
 
-	/**
-	 * Work like {@link #mode(Object...)}.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<? super T>> ModePair<T> mode(Comparator<? super T> c, T... objects) {
-		Objects.requireNonNull(objects, "objects must not be null");
-		if (objects.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
-		}
-		Arrays.sort(objects, c);
-		Mode<T> mode = new Mode<T>(objects[0]);
-		for (T t : objects) {
-			mode.checkMaxAppears(t);
 
-		}
-
-		return mode.getMode();
-
-	}
 
 	/**
 	 * Work like {@link #mode(Object...)}.
 	 */
-	public static ModePair<Integer> mode(int... numbers) {
+	public static Entry<Set<Integer>, Integer> mode(int... numbers) {
 		Objects.requireNonNull(numbers, "numbers must not be null");
 		if (numbers.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
+			return null;
 		}
-		Arrays.sort(numbers);
-		Mode<Integer> mode = new Mode<Integer>(numbers[0]);
+		Mode<Integer> mode = new Mode<Integer>();
 		for (int t : numbers) {
 			mode.checkMaxAppears(t);
 		}
@@ -212,13 +196,12 @@ public class StatisticMeasures {
 	/**
 	 * Work like {@link #mode(Object...)}.
 	 */
-	public static ModePair<Long> mode(long... numbers) {
+	public static Entry<Set<Long>, Integer> mode(long... numbers) {
 		Objects.requireNonNull(numbers, "numbers must not be null");
 		if (numbers.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
+			return null;
 		}
-		Arrays.sort(numbers);
-		Mode<Long> mode = new Mode<>(numbers[0]);
+		Mode<Long> mode = new Mode<>();
 		for (long t : numbers) {
 			mode.checkMaxAppears(t);
 
@@ -230,13 +213,12 @@ public class StatisticMeasures {
 	/**
 	 * Work like {@link #mode(Object...)}.
 	 */
-	public static ModePair<Double> mode(double... numbers) {
+	public static Entry<Set<Double>, Integer> mode(double... numbers) {
 		Objects.requireNonNull(numbers, "numbers must not be null");
 		if (numbers.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
+			return null;
 		}
-		Arrays.sort(numbers);
-		Mode<Double> mode = new Mode<Double>(numbers[0]);
+		Mode<Double> mode = new Mode<Double>();
 		for (double t : numbers) {
 			mode.checkMaxAppears(t);
 		}
@@ -246,72 +228,52 @@ public class StatisticMeasures {
 	/**
 	 * Work like {@link #mode(Object...)}.
 	 */
-	public static ModePair<Float> mode(float... numbers) {
+	public static Entry<Set<Float>, Integer> mode(float... numbers) {
 		Objects.requireNonNull(numbers, "numbers must not be null");
 
 		if (numbers.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
-		}
-
-		Arrays.sort(numbers);
-		Mode<Float> mode = new Mode<Float>(numbers[0]);
+           return null;   
+		}		
+		Mode<Float> mode = new Mode<Float>();
 		for (float t : numbers) {
 			mode.checkMaxAppears(t);
 		}
 		return mode.getMode();
 	}
 
-	/**
-	 * Work like {@link #mode(Object...)}.
-	 */
-	public static ModePair<String> mode(String... strings) {
-		Objects.requireNonNull(strings, "strings must not be null");
-		if (strings.length == 0) {
-			return new ModePair<>(new HashSet<>(), 0);
-		}
-		Arrays.sort(strings);
-		Mode<String> mode = new Mode<>(strings[0]);
-		for (String t : strings) {
-			mode.checkMaxAppears(t);
-		}
-		return mode.getMode();
-	}
 
 	private static class Mode<T> {
-		private int nTimesLastObjectAppears = 0;
-		private int maxTimeObjectAppears = 0;
-		private T prevObject;
-		Set<T> mostAppearsObjects;
+		
+	    private Map<T, Integer> frequencies;
+	    private Set<T> modes;
+	    private int modeFrequency ;
+	    
 
-		public Mode(T firstObjectInArray) {
-			prevObject = firstObjectInArray;
-			mostAppearsObjects = new HashSet<>();
+		public Mode() {
+			this.modeFrequency = 0;
+			this.modes = new HashSet<>();
+			this.frequencies = new HashMap<>();
 		}
 
 		void checkMaxAppears(T currentObject) {
-			if (currentObject.equals(prevObject)) {
-				nTimesLastObjectAppears += 1;
-			} else {
-				addObjectToMap();
-				prevObject = currentObject;
-				nTimesLastObjectAppears = 1;
-			}
+			
+			     final Integer before = frequencies.getOrDefault(currentObject, 0);
+		         final Integer after = before + 1;
+		         frequencies.put(currentObject, after);
+		         if (after == modeFrequency) {
+		            modes.add(currentObject);
+		         } else if (after > modeFrequency) {
+		            modes.clear();
+		            modes.add(currentObject);
+		            modeFrequency = after;
+		         }
+		         
 		}
 
-		void addObjectToMap() {
-			if (nTimesLastObjectAppears > maxTimeObjectAppears) {
-				mostAppearsObjects.clear();
-				mostAppearsObjects.add(prevObject);
-				maxTimeObjectAppears = nTimesLastObjectAppears;
-			} else if (nTimesLastObjectAppears == maxTimeObjectAppears) {
-				mostAppearsObjects.add(prevObject);
-			}
-		}
 
-		ModePair<T> getMode() {
-			// to check appears of last object of loop and add it to map
-			addObjectToMap();
-			return new ModePair<>(mostAppearsObjects, maxTimeObjectAppears);
+		Entry<Set<T>, Integer> getMode() {
+		
+			return new SimpleImmutableEntry<Set<T>, Integer>(modes,modeFrequency);
 		}
 	}
 
@@ -341,25 +303,25 @@ public class StatisticMeasures {
 	 *             if numbers array are null
 	 */
 	public static double geometricMean(int... numbers) {
-		if (numbers == null) {
-			throw new IllegalArgumentException("numbers must be not null");
-		}
+		Objects.requireNonNull(numbers, "numbers must not be null");
 
 		if (numbers.length == 0) {
 			return Double.NaN;
 		}
 
-		Mean stats = new Mean();
+		Mean mean = new Mean();
 
 		for (int i : numbers) {
 			if (i == 0) {
-				return 0.0;
+				mean.add(1);
 			}
-			stats.add(i);
+			else{
+			mean.add(i);
+			}
 
 		}
 
-		return stats.getGeometricMean();
+		return mean.getGeometricMean();
 
 	}
 
@@ -367,26 +329,25 @@ public class StatisticMeasures {
 	 * Works just like {@link Mean#geometricMean(int...)} except the array
 	 * contains long numbers.
 	 */
-	public static double geometricMean(long... numbers) {
-
-		if (numbers == null) {
-			throw new IllegalArgumentException("numbers must be not null");
-		}
-
+	public static double geometricMean(long... numbers) {	
+		Objects.requireNonNull(numbers, "numbers must not be null");
+		
 		if (numbers.length == 0) {
 			return Double.NaN;
 		}
 
-		Mean stats = new Mean();
+		Mean mean = new Mean();
 		for (long i : numbers) {
 			if (i == 0) {
-				return 0.0;
+				mean.add(1);
 			}
-			stats.add(i);
+			else{
+			mean.add(i);
+			}
 
 		}
 
-		return stats.getGeometricMean();
+		return mean.getGeometricMean();
 
 	}
 
@@ -395,10 +356,7 @@ public class StatisticMeasures {
 	 * contains double numbers.
 	 */
 	public static double geometricMean(double... numbers) {
-
-		if (numbers == null) {
-			throw new IllegalArgumentException("numbers must be not null");
-		}
+		Objects.requireNonNull(numbers, "numbers must not be null");
 
 		if (numbers.length == 0) {
 			return Double.NaN;
@@ -408,11 +366,13 @@ public class StatisticMeasures {
 
 		for (double i : numbers) {
 			if (i == 0) {
-				return 0.0;
+				mean.add(1);
 			} else if (i == Double.NaN) {
 				return Double.NaN;
 			}
+			else{
 			mean.add(i);
+			}
 		}
 
 		return mean.getGeometricMean();
@@ -424,7 +384,6 @@ public class StatisticMeasures {
 	 * contains float numbers
 	 */
 	public static double geometricMean(float... numbers) {
-
 		Objects.requireNonNull(numbers, "numbers must not be null");
 		if (numbers.length == 0) {
 			return Double.NaN;
@@ -433,11 +392,13 @@ public class StatisticMeasures {
 
 		for (float i : numbers) {
 			if (i == 0) {
-				return 0;
+				mean.add(1);
 			} else if (i == Float.NaN) {
 				return Double.NaN;
 			}
+			else{
 			mean.add(i);
+			}
 		}
 
 		return mean.getGeometricMean();
