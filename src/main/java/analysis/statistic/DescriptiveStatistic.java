@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 /**
- * The class StatisticMeasures contains methods for performing basic Statistical
+ * The class DescriptiveStatistic contains methods for performing basic Statistical
  * Measures such as mode, arithmetic mean,geometric mean, median , variance ,and
  * stander division functions.
  * 
